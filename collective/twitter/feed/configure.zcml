@@ -1,0 +1,25 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    i18n_domain="collective.feed">
+
+  <five:registerPackage package="." initialize=".initialize" />
+
+  <genericsetup:registerProfile
+      name="default"
+      title="collective.feed"
+      directory="profiles/default"
+      description="Installs the collective.feed package"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+  <!-- -*- extra stuff goes here -*- -->
+
+  <utility 
+    component=".utility.Feeder"
+    provides=".interfaces.IFeedUtility"
+    name="timeline"
+    />
+  
+</configure>

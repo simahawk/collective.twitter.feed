@@ -1,0 +1,74 @@
+<tal:if condition="options/timeline">
+    <div class="timeline"
+         tal:define="timeline options/timeline; tool options/tool"
+         tal:attributes="class python:'timeline' + (options['show_avatars'] and ' avatars-on' or '')">
+        <h4 tal:condition="options/show_header" i18n:translate="">
+            Twitter Timeline
+        </h4>
+        <tal:item repeat="item options/timeline">
+            <div class="tweet-item"
+                 tal:define="data python:tool.get_tweet_data(item);
+                             odd repeat/item/odd;
+                             isFirst repeat/item/end;
+                             isLast repeat/item/end;
+                             css_class python:'tweet-item' + (isFirst and ' first' or '');
+                             css_class python: css_class + (isLast and ' last' or '');
+                             css_class python: css_class + (odd and ' odd' or ' even');"
+                 tal:attributes="class css_class">
+                <div class="tweet-image" tal:condition="options/show_avatars">
+                    <img class="avatar"
+                        src="#"
+                        tal:attributes="src data/profile_img_url"/>
+                </div>
+                <div class="tweet-content">
+                    <div class="tweet-row">
+                        <span class="tweet-user-name">
+                            <a class="tweet-screen-name"
+                               href="#"
+                               tal:define="screen_name data/screen_name"
+                               tal:attributes="href string:http://twitter.com/#!/${screen_name}">
+                                <span tal:content="screen_name"/>
+                            </a>
+                        </span>
+                    </div>
+                    <div class="tweet-row">
+                        <div class="tweet-text">
+                            <p tal:content="structure data/text" />
+                        </div>
+                    </div>
+                </div>
+                <div class="tweet-actions" i18n:domain="collective.twitter.portlets">
+                    <a class="tweet-timestamp"
+                       tal:attributes="href data/url"
+                       tal:content="python:toLocalizedTime(data.date, long_format=1)"
+                       tal:condition="not:options/pretty_date"
+                       i18n:translate="">
+                       timestamp
+                    </a>
+                    <a class="tweet-timestamp"
+                       tal:attributes="href data/url" 
+                       tal:content="data/date"
+                       tal:condition="options/pretty_date"
+                       i18n:translate="">
+                       pretty date
+                    </a>
+                  <a class="reply"
+                     tal:attributes="href data/reply_url"
+                     i18n:translate="">
+                     Reply
+                  </a>
+                  <a class="retweet"
+                     tal:attributes="href data/retweet_url"
+                     i18n:translate="">
+                     ReTweet
+                  </a>
+                  <a class="fav"
+                      tal:attributes="href data/fav_url"
+                      i18n:translate="">
+                      Favorite
+                  </a>
+                </div>
+            </div>
+      </tal:item>
+    </div>
+</tal:if>

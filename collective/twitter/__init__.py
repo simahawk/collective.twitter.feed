@@ -1,0 +1,1 @@
+/home/simahawk/dev/plone/plone4/buildout/eggs/collective.twitter.accounts-1.0.3-py2.6.egg/collective/twitter/__init__.py
