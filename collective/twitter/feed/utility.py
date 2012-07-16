@@ -45,6 +45,12 @@ class Feeder(object):
 
     def __init__(self, account_id, context=None, request=None):
         assert account_id
+        if account_id == 'default':
+            accounts = self.get_accounts()
+            try:
+                account_id,account = accounts.items()[0]
+            except IndexError:
+                raise Exception("No default account found!")
         self.account_id = account_id
         self.account = self.get_account(account_id)
         self.api = self._get_api()
@@ -56,7 +62,6 @@ class Feeder(object):
                          consumer_secret=self.account.get('consumer_secret'),
                          access_token_key=self.account.get('oauth_token'),
                          access_token_secret=self.account.get('oauth_token_secret'),)
-
         return api
 
     def get_account(self, account_id):
