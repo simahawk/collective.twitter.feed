@@ -27,7 +27,6 @@ setup(name='collective.twitter.feed',
           'setuptools',
           # -*- Extra requirements: -*-
           'collective.twitter.accounts',
-          'tweepy',
       ],
       entry_points="""
       # -*- Entry points: -*-
@@ -35,6 +34,4 @@ setup(name='collective.twitter.feed',
       [z3c.autoinclude.plugin]
       target = plone
       """,
-      setup_requires=["PasteScript"],
-      paster_plugins=["ZopeSkel"],
       )
