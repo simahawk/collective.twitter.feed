@@ -1,1 +1,6 @@
-/home/simahawk/dev/plone/plone4/buildout/eggs/collective.twitter.accounts-1.0.3-py2.6.egg/collective/twitter/__init__.py
+# See http://peak.telecommunity.com/DevCenter/setuptools#namespace-packages
+try:
+    __import__('pkg_resources').declare_namespace(__name__)
+except ImportError:
+    from pkgutil import extend_path
+    __path__ = extend_path(__path__, __name__)
