@@ -15,6 +15,10 @@ from collective.twitter.feed.interfaces import IFeedUtility
 from collective.twitter.feed.interfaces import IFeeder
 import twitter
 
+import logging 
+
+logger = logging.getLogger(__file__)
+
 # We need to make URLs, hastags and users clickable.
 URL_TEMPLATE = """
 <a href="%s" target="blank_">%s</a>
@@ -48,15 +52,7 @@ class Feeder(object):
 
     def __init__(self, account_id, context=None, request=None):
         assert account_id
-        if account_id == 'default':
-            accounts = self.get_accounts()
-            if accounts:
-                try:
-                    account_id,account = accounts.items()[0]
-                except IndexError:
-                    raise Exception("No default account found!")
-        self.account_id = account_id
-        self.account = self.get_account(account_id)
+        self.account_id, self.account = self.get_account(account_id)
         self.api = self._get_api()
         self.request = request or getRequest()
         self.context = context or object()
@@ -70,15 +66,20 @@ class Feeder(object):
                          access_token_secret=self.account.get('oauth_token_secret'),)
         return api
 
-    @classmethod
     def enabled(self):
         return bool(self.account)
 
     def get_account(self, account_id):
-        accounts =  self.get_accounts()
-        if accounts:
-            return accounts.get(account_id)
-        return {}
+        account = {}
+        accounts = self.get_accounts() or {}
+        if account_id == 'default' and accounts:
+            try:
+                account_id,account = accounts.items()[0]
+            except IndexError:
+                raise Exception("No default account found!")
+        else:
+            account = accounts.get(account_id)
+        return account_id,account
 
     @classmethod
     def get_accounts(cls):
@@ -86,21 +87,30 @@ class Feeder(object):
         accounts = registry.get('collective.twitter.accounts', [])
         return accounts
 
-    def get_timeline(self, user=None,
-                           count=5,
-                           rendered=False,
-                           rendering_options={},
-                           template=None):
-        if not self.api:
-            return None
-        if user is None:
-            user = self.account_id
+    def _get_timeline(self, user, count=5):
         timeline = None
         try:
             timeline = self.api.GetUserTimeline(user, count=count)
         except Exception, e:
             msg = "Something went wrong: %s" % str(e)
-            print msg
+            logger.error(msg)
+        return timeline
+
+    def get_timeline(self, user=None,
+                           count=5,
+                           rendered=False,
+                           rendering_options={},
+                           template=None):
+
+        if not self.enabled():
+            return None
+        
+        if user is None:
+            # if no user is given use the default one
+            user = self.account_id
+        
+        timeline = self._get_timeline(user, count=count)
+
         if rendered:
             templ = template or self.template
             opts = rendering_options.copy()
