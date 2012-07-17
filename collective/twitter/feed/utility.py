@@ -38,17 +38,23 @@ class AttrDict(dict):
 class Feeder(object):
     interface.classProvides(IFeedUtility)
     interface.implements(IFeeder)
-
+    
+    account_id = ''
+    account = {}
+    api = None
+    context = None
+    request = None
     template = ViewPageTemplateFile("feed.pt")
 
     def __init__(self, account_id, context=None, request=None):
         assert account_id
         if account_id == 'default':
             accounts = self.get_accounts()
-            try:
-                account_id,account = accounts.items()[0]
-            except IndexError:
-                raise Exception("No default account found!")
+            if accounts:
+                try:
+                    account_id,account = accounts.items()[0]
+                except IndexError:
+                    raise Exception("No default account found!")
         self.account_id = account_id
         self.account = self.get_account(account_id)
         self.api = self._get_api()
@@ -56,14 +62,23 @@ class Feeder(object):
         self.context = context or object()
 
     def _get_api(self):
+        if not self.account: 
+            return None
         api = twitter.Api(consumer_key=self.account.get('consumer_key'),
                          consumer_secret=self.account.get('consumer_secret'),
                          access_token_key=self.account.get('oauth_token'),
                          access_token_secret=self.account.get('oauth_token_secret'),)
         return api
 
+    @classmethod
+    def enabled(self):
+        return bool(self.account)
+
     def get_account(self, account_id):
-        return self.get_accounts()[account_id]
+        accounts =  self.get_accounts()
+        if accounts:
+            return accounts.get(account_id)
+        return {}
 
     @classmethod
     def get_accounts(cls):
@@ -76,6 +91,8 @@ class Feeder(object):
                            rendered=False,
                            rendering_options={},
                            template=None):
+        if not self.api:
+            return None
         if user is None:
             user = self.account_id
         timeline = None
