@@ -1,5 +1,3 @@
-import tweepy
-
 from zope import interface
 from zope import component
 from zope.component import getUtility
