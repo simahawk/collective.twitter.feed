@@ -9,7 +9,7 @@ from Products.PloneTestCase import PloneTestCase as ptc
 from Products.PloneTestCase.layer import PloneSite
 ptc.setupPloneSite()
 
-import collective.feed
+import collective.twitter.feed
 
 
 class TestCase(ptc.PloneTestCase):
@@ -19,7 +19,7 @@ class TestCase(ptc.PloneTestCase):
         @classmethod
         def setUp(cls):
             fiveconfigure.debug_mode = True
-            ztc.installPackage(collective.feed)
+            ztc.installPackage(collective.twitter.feed)
             fiveconfigure.debug_mode = False
 
         @classmethod
@@ -32,21 +32,21 @@ def test_suite():
 
         # Unit tests
         #doctestunit.DocFileSuite(
-        #    'README.txt', package='collective.feed',
+        #    'README.txt', package='collective.twitter.feed',
         #    setUp=testing.setUp, tearDown=testing.tearDown),
 
         #doctestunit.DocTestSuite(
-        #    module='collective.feed.mymodule',
+        #    module='collective.twitter.feed.mymodule',
         #    setUp=testing.setUp, tearDown=testing.tearDown),
 
 
         # Integration tests that use PloneTestCase
         #ztc.ZopeDocFileSuite(
-        #    'README.txt', package='collective.feed',
+        #    'README.txt', package='collective.twitter.feed',
         #    test_class=TestCase),
 
         #ztc.FunctionalDocFileSuite(
-        #    'browser.txt', package='collective.feed',
+        #    'browser.txt', package='collective.twitter.feed',
         #    test_class=TestCase),
 
         ])

@@ -1,0 +1,21 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    i18n_domain="collective.twitter.feed">
+
+    <include package="plone.tiles" file="meta.zcml" />
+
+    <plone:tile
+        name="twitter.feed.tile"
+        title="Twitter Feed Tile"
+        description=""
+        class=".feed.TwitterFeedTile"
+        schema=".feed.ITwitterFeedTile"
+        template="tile_twitter_feed.pt"
+        permission="zope.Public"
+        add_permission="cmf.ModifyPortalContent"
+        for="*"
+        />
+
+</configure>

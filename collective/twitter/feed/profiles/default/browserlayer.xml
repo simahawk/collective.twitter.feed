@@ -3,7 +3,7 @@
     <!-- -*- extra stuff goes here -*- -->
 
     <layer name="twitter_feed_layer"
-        interface="collective.feed.interfaces.ILayer"
+        interface="collective.twitter.feed.interfaces.ILayer"
     />
 </layers>
 

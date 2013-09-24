@@ -27,6 +27,7 @@ setup(name='collective.twitter.feed',
           'setuptools',
           # -*- Extra requirements: -*-
           'collective.twitter.accounts',
+          'collective.prettydate',
       ],
       entry_points="""
       # -*- Entry points: -*-
