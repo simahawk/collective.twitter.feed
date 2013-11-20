@@ -3,7 +3,6 @@ import logging
 
 from zope.component import getUtility
 from zope import schema
-from zope.interface import implements
 from zope.interface import Interface
 
 from plone.tiles import PersistentTile
@@ -33,8 +32,17 @@ class ITwitterFeedTile(Interface):
 
     tw_user = schema.TextLine(
         title=_(u'Twitter user'),
-        description=_(u"The Twitter user you wish to get feed from (you can include or omit the initial @)."),
-        required=True
+        description=_(u"The Twitter user you wish to get feed from "
+                      u"(you can include or omit the initial @)."),
+        required=False
+    )
+
+    search = schema.TextLine(
+        title=_(u'Search terms'),
+        description=_(u"Search terms, can be also hashtags."
+                      u"If you provide 'Twitter user' the search will be"
+                      u"filtered on tweets from that user"),
+        required=False
     )
 
     show_avatars = schema.Bool(
@@ -76,10 +84,10 @@ class TwitterFeedTile(PersistentTile):
 
     @ram.cache(cache_key_simple)
     def results(self):
-
         results = ''
         tw_user = self.data['tw_user']
-        if not tw_user:
+        search = self.data['search']
+        if not tw_user and not search:
             logger.info('No twitter account set up.')
             return results
 
@@ -91,11 +99,23 @@ class TwitterFeedTile(PersistentTile):
         }
 
         try:
-            results = self.feed_tool.get_timeline(tw_user,
-                                                  count=max_results,
-                                                  rendered=1,
-                                                  rendering_options=rendering_options)
-            logger.info("%s results obtained. Limited to %s." % (len(results), max_results))
+            if search:
+                results = self.feed_tool.get_search(
+                    search,
+                    user=tw_user,
+                    count=max_results,
+                    rendered=1,
+                    rendering_options=rendering_options
+                )
+            else:
+                results = self.feed_tool.get_timeline(
+                    tw_user,
+                    count=max_results,
+                    rendered=1,
+                    rendering_options=rendering_options
+                )
+            logger.info("%s results obtained. Limited to %s." % (len(results),
+                                                                 max_results))
         except Exception, e:
             logger.info("Something went wrong: %s." % e)
             results = ''

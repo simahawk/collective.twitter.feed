@@ -1,21 +1,23 @@
+#-*- coding: utf-8 -*-
+import urllib
+import DateTime
+import twitter
+import logging
+
 from zope import interface
 from zope import component
 from zope.component import getUtility
-
 from zope.globalrequest import getRequest
-
-from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 
 from plone.registry.interfaces import IRegistry
 
+from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
+
 from collective.prettydate.interfaces import IPrettyDate
-import DateTime
 
 from collective.twitter.feed.interfaces import IFeedUtility
 from collective.twitter.feed.interfaces import IFeeder
-import twitter
 
-import logging 
 
 logger = logging.getLogger(__file__)
 
@@ -30,6 +32,7 @@ USER_TEMPLATE = """
 <a href="http://twitter.com/#!/%s" target="blank_">%s</a>
 """
 
+
 class AttrDict(dict):
 
     def __getattr__(self, k):
@@ -42,7 +45,7 @@ class AttrDict(dict):
 class Feeder(object):
     interface.classProvides(IFeedUtility)
     interface.implements(IFeeder)
-    
+
     account_id = ''
     account = {}
     api = None
@@ -58,12 +61,14 @@ class Feeder(object):
         self.context = context or object()
 
     def _get_api(self):
-        if not self.account: 
+        if not self.account:
             return None
-        api = twitter.Api(consumer_key=self.account.get('consumer_key'),
-                         consumer_secret=self.account.get('consumer_secret'),
-                         access_token_key=self.account.get('oauth_token'),
-                         access_token_secret=self.account.get('oauth_token_secret'),)
+        api = twitter.Api(
+            consumer_key=self.account.get('consumer_key'),
+            consumer_secret=self.account.get('consumer_secret'),
+            access_token_key=self.account.get('oauth_token'),
+            access_token_secret=self.account.get('oauth_token_secret')
+        )
         return api
 
     def enabled(self):
@@ -74,12 +79,12 @@ class Feeder(object):
         accounts = self.get_accounts() or {}
         if account_id == 'default' and accounts:
             try:
-                account_id,account = accounts.items()[0]
+                account_id, account = accounts.items()[0]
             except IndexError:
                 raise Exception("No default account found!")
         else:
             account = accounts.get(account_id)
-        return account_id,account
+        return account_id, account
 
     @classmethod
     def get_accounts(cls):
@@ -96,36 +101,74 @@ class Feeder(object):
             logger.error(msg)
         return timeline
 
-    def get_timeline(self, user=None,
-                           count=5,
-                           rendered=False,
-                           rendering_options={},
-                           template=None):
+    def _get_search(self, term, count=5):
+        timeline = None
+        try:
+            timeline = self.api.GetSearch(term,
+                                          count=count,
+                                          include_entities=True)
+        except Exception, e:
+            msg = "Something went wrong: %s" % str(e)
+            logger.error(msg)
+        return timeline
+
+    def _render(self, timeline, template, **rendering_options):
+        templ = template or self.template
+        opts = rendering_options.copy()
+        opts.update(dict(
+            timeline=timeline,
+            tool=self,
+        ))
+        defaults = dict(
+            show_avatars=False,
+            pretty_date=True,
+            show_header=True,
+        )
+        for k, v in defaults.iteritems():
+            opts[k] = opts.get(k, v)
+        timeline = templ(self, **opts)
+        return timeline
+
+    def get_timeline(self,
+                     user=None,
+                     count=5,
+                     rendered=False,
+                     rendering_options={},
+                     template=None):
 
         if not self.enabled():
             return None
-        
+
         if user is None:
             # if no user is given use the default one
             user = self.account_id
-        
+
         timeline = self._get_timeline(user, count=count)
 
         if rendered:
-            templ = template or self.template
-            opts = rendering_options.copy()
-            opts.update(dict(
-                timeline=timeline,
-                tool = self,
-            ))
-            defaults = dict(
-                show_avatars = False,
-                pretty_date = True,
-                show_header = True,
-            )
-            for k,v in defaults.items():
-                opts[k] = opts.get(k, v)
-            timeline = templ(self, **opts)
+            timeline = self._render(timeline, template, **rendering_options)
+        return timeline
+
+    def get_search(self,
+                   search_term,
+                   user=None,
+                   count=5,
+                   rendered=False,
+                   rendering_options={},
+                   template=None):
+
+        if not self.enabled():
+            return None
+
+        if user:
+            search_term += '+FROM:%s' % user
+
+        search_term = urllib.quote(search_term)
+
+        timeline = self._get_search(search_term, count=count)
+
+        if rendered:
+            timeline = self._render(timeline, template, **rendering_options)
         return timeline
 
     def get_tweet_data(self, tweet, pretty_date=True):
@@ -145,17 +188,17 @@ class Feeder(object):
                 split_text[index] = URL_TEMPLATE % (word, word)
 
         result = AttrDict(
-            text = ' '.join(split_text),
-            url = self.get_tweet_url(tweet),
-            reply_url = self.get_reply_url(tweet),
-            retweet_url = self.get_retweet_url(tweet),
-            fav_url = self.get_fav_url(tweet),
-            profile_img_url = self.get_profile_image_url(tweet),
-            screen_name = tweet.GetUser().GetScreenName(),
-            date = self.get_date(tweet, pretty_date=pretty_date),
+            text=' '.join(split_text),
+            url=self.get_tweet_url(tweet),
+            reply_url=self.get_reply_url(tweet),
+            retweet_url=self.get_retweet_url(tweet),
+            fav_url=self.get_fav_url(tweet),
+            profile_img_url=self.get_profile_image_url(tweet),
+            screen_name=tweet.GetUser().GetScreenName(),
+            date=self.get_date(tweet, pretty_date=pretty_date),
         )
         return result
-        
+
     def get_tweet_url(self, tweet):
         return "https://twitter.com/%s/status/%s" % \
             (tweet.user.screen_name, tweet.id)
@@ -181,5 +224,3 @@ class Feeder(object):
 
     def get_profile_image_url(self, tweet):
         return tweet.GetUser().GetProfileImageUrl()
-
-    
